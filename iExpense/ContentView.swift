@@ -9,19 +9,49 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var numbers = [Int]()
-    @State private var currentNumber = 1
+    
+    @Environment(\.presentationMode) var presentation
+    
+    @ObservedObject var expenses = Expenses()
+    @State private var showingAddExpense = false
+    
+    func removeItems(at offsets: IndexSet) {
+        expenses.items.remove(atOffsets: offsets)
+    }
+    
     var body: some View {
-        VStack {
+        NavigationView {
             List {
-                ForEach(self.numbers, id: \.self) {
-                    Text("\($0)")
+                ForEach(expenses.items) { item in
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text(item.name).font(.headline)
+                            Text(item.type)
+                        }
+                        Spacer()
+                        Text("$\(item.amount)")
+                    }
+                }.onDelete(perform: removeItems)
+            }
+            .navigationBarTitle("iExpense")
+            
+            .navigationBarItems(trailing:
+                HStack {
+                    EditButton()
+                    Spacer()
+                    Button(action: {
+                        self.showingAddExpense = true
+                    }) {
+                        Image(systemName: "plus")
+                    }
+                    
+                    
                 }
-            }
-            Button("Add Number") {
-                self.numbers.append(self.currentNumber)
-                self.currentNumber += 1
-            }
+                
+            )
+            
+        }.sheet(isPresented: $showingAddExpense) {
+            AddView(expenses: self.expenses)
         }
     }
 }
